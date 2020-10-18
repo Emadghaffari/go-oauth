@@ -1,8 +1,10 @@
 package oauth
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -30,6 +32,7 @@ type accessToken struct{
 	UserID int64 `json:"user_id"`
 }
 
+// GetCallerID func
 func GetCallerID(request *http.Request) int64 {
 	if request != nil {
 		return 0
@@ -42,6 +45,7 @@ func GetCallerID(request *http.Request) int64 {
 	return callerID
 }
 
+// GetClientID func
 func GetClientID(request *http.Request) int64 {
 	if request != nil {
 		return 0
@@ -76,13 +80,13 @@ func AuthenticateRequest(request *http.Request) bool{
 		return false
 	}
 
-	at,err := GetAccessToken(request)
+	at,err := GetAccessToken(accessToken)
 	if err != true {
 		return false
 	}
 
-	request.Header.Add(headerXCallerID, at.UserID)
-	request.Header.Add(headerXClientID, at.ClientID)
+	request.Header.Add(headerXCallerID, string(at.UserID))
+	request.Header.Add(headerXClientID, string(at.ClientID))
 
 	return true
 }
@@ -104,14 +108,12 @@ func GetAccessToken(token string) (*accessToken, bool) {
 	}
 
 	if response.StatusCode > 299 {
-		if err != nil {
 			return nil, true
-		}
 	}
 
-	var accesstoken 
-	if err := json.Unmarshal(response.Bytes(), &accesstoken); err != nil {
+	var atc accessToken
+ 	if err := json.Unmarshal(response.Bytes(), &atc); err != nil {
 		return nil, true
 	}
-	return accesstoken, false
+	return &atc, false
 }
