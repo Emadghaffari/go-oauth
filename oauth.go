@@ -8,15 +8,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/emadghaffari/res_errors/errors"
 	"github.com/mercadolibre/golang-restclient/rest"
 )
 
-const(
-	headerXPublic = "X-Public"
+const (
+	headerXPublic   = "X-Public"
 	headerXClientID = "X-Client-Id"
 	headerXCallerID = "X-Caller-Id"
 
-	paramAccessToken="access_token"
+	paramAccessToken = "access_token"
 )
 
 var (
@@ -26,10 +27,10 @@ var (
 	}
 )
 
-type accessToken struct{
-	ID string `json:"id"`
-	ClientID int64 `json:"client_id"`
-	UserID int64 `json:"user_id"`
+type accessToken struct {
+	ID       string `json:"id"`
+	ClientID int64  `json:"client_id"`
+	UserID   int64  `json:"user_id"`
 }
 
 // GetCallerID func
@@ -38,7 +39,7 @@ func GetCallerID(request *http.Request) int64 {
 		return 0
 	}
 
-	callerID,err := strconv.ParseInt(request.Header.Get(headerXCallerID),10,64)
+	callerID, err := strconv.ParseInt(request.Header.Get(headerXCallerID), 10, 64)
 	if err != nil {
 		return 0
 	}
@@ -51,7 +52,7 @@ func GetClientID(request *http.Request) int64 {
 		return 0
 	}
 
-	ClientID,err := strconv.ParseInt(request.Header.Get(headerXClientID),10,64)
+	ClientID, err := strconv.ParseInt(request.Header.Get(headerXClientID), 10, 64)
 	if err != nil {
 		return 0
 	}
@@ -61,8 +62,8 @@ func GetClientID(request *http.Request) int64 {
 // IsPublic func
 // validate request is public or not
 func IsPublic(request *http.Request) bool {
-	if request == nil{
-		return false
+	if request == nil {
+		return true
 	}
 
 	return request.Header.Get(headerXPublic) == "true"
@@ -70,28 +71,28 @@ func IsPublic(request *http.Request) bool {
 
 // AuthenticateRequest func
 // authenticate request is valid or not
-func AuthenticateRequest(request *http.Request) bool{
+func AuthenticateRequest(request *http.Request) *errors.ResError {
 	if request == nil {
-		return false
+		return errors.HandlerBadRequest("request is null")
 	}
 	cleanRequest(request)
 	accessToken := strings.TrimSpace(request.URL.Query().Get(paramAccessToken))
-	if accessToken == ""{
-		return false
+	if accessToken == "" {
+		return errors.HandlerBadRequest("accessToken is null")
 	}
 
-	at,err := GetAccessToken(accessToken)
-	if err != true {
-		return false
+	at, err := GetAccessToken(accessToken)
+	if err != nil {
+		return err
 	}
 
 	request.Header.Add(headerXCallerID, string(at.UserID))
 	request.Header.Add(headerXClientID, string(at.ClientID))
 
-	return true
+	return nil
 }
 
-func cleanRequest(request *http.Request)  {
+func cleanRequest(request *http.Request) {
 	if request == nil {
 		return
 	}
@@ -100,20 +101,20 @@ func cleanRequest(request *http.Request)  {
 }
 
 // GetAccessToken func
-func GetAccessToken(token string) (*accessToken, bool) {
-	response := oauthAccessToken.Get(fmt.Sprintf("/oauth/accesstoken/%s",token))
-	
+func GetAccessToken(token string) (*accessToken, *errors.ResError) {
+	response := oauthAccessToken.Get(fmt.Sprintf("/oauth/accesstoken/%s", token))
+
 	if response == nil || response.Response == nil {
-		return nil, true
+		return nil, errors.HandlerBadRequest("request is null")
 	}
 
 	if response.StatusCode > 299 {
-			return nil, true
+		return nil, errors.HandlerBadRequest(fmt.Sprintf("response is invalid %v", response))
 	}
 
 	var atc accessToken
- 	if err := json.Unmarshal(response.Bytes(), &atc); err != nil {
-		return nil, true
+	if err := json.Unmarshal(response.Bytes(), &atc); err != nil {
+		return nil, errors.HandlerBadRequest(fmt.Sprintf("system cant unmarshal data: %v", err))
 	}
-	return &atc, false
+	return &atc, nil
 }
