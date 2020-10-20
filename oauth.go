@@ -40,7 +40,7 @@ func GetCallerID(request *http.Request) int64 {
 	}
 
 	callerID, err := strconv.ParseInt(request.Header.Get(headerXCallerID), 10, 64)
-	if err == nil {
+	if err != nil {
 		return 0
 	}
 	return callerID
