@@ -29,8 +29,8 @@ var (
 
 type accessToken struct {
 	ID       string `json:"id"`
-	ClientID int64  `json:"client_id"`
-	UserID   int64  `json:"user_id"`
+	ClientID string `json:"client_id"`
+	UserID   string `json:"user_id"`
 }
 
 // GetCallerID func
@@ -86,8 +86,8 @@ func AuthenticateRequest(request *http.Request) *errors.ResError {
 		return err
 	}
 
-	request.Header.Add(headerXCallerID, string(at.UserID))
-	request.Header.Add(headerXClientID, string(at.ClientID))
+	request.Header.Add(headerXCallerID, at.UserID)
+	request.Header.Add(headerXClientID, at.ClientID)
 
 	return nil
 }
@@ -102,7 +102,7 @@ func cleanRequest(request *http.Request) {
 
 // GetAccessToken func
 func GetAccessToken(token string) (*accessToken, *errors.ResError) {
-	response := oauthAccessToken.Get(fmt.Sprintf("/oauth/accesstoken/%s", token))
+	response := oauthAccessToken.Get(fmt.Sprintf("/oauth/access_token/%s", token))
 
 	if response == nil || response.Response == nil {
 		return nil, errors.HandlerBadRequest("request is null")
