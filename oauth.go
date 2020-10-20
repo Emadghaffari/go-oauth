@@ -29,8 +29,8 @@ var (
 
 type accessToken struct {
 	ID       string `json:"id"`
-	ClientID string `json:"client_id"`
-	UserID   string `json:"user_id"`
+	ClientID int64  `json:"client_id"`
+	UserID   int64  `json:"user_id"`
 }
 
 // GetCallerID func
@@ -86,8 +86,8 @@ func AuthenticateRequest(request *http.Request) *errors.ResError {
 		return err
 	}
 
-	request.Header.Add(headerXCallerID, at.UserID)
-	request.Header.Add(headerXClientID, at.ClientID)
+	request.Header.Add(headerXCallerID, strconv.FormatInt(at.UserID, 10))
+	request.Header.Add(headerXClientID, strconv.FormatInt(at.ClientID, 10))
 
 	return nil
 }
