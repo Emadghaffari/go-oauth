@@ -85,9 +85,9 @@ func AuthenticateRequest(request *http.Request) errors.ResError {
 	if err != nil {
 		return err
 	}
-
 	request.Header.Add(headerXCallerID, fmt.Sprintf("%v",at.UserID))
 	request.Header.Add(headerXClientID, fmt.Sprintf("%v",at.ClientID))
+
 
 	return nil
 }
