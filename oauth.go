@@ -83,12 +83,13 @@ func AuthenticateRequest(request *http.Request) errors.ResError {
 
 	at, err := GetAccessToken(accessToken)
 	if err != nil {
+		if err.Status() == http.StatusNotFound {
+			return nil
+		}
 		return err
 	}
 	request.Header.Add(headerXCallerID, fmt.Sprintf("%v",at.UserID))
 	request.Header.Add(headerXClientID, fmt.Sprintf("%v",at.ClientID))
-
-
 	return nil
 }
 
